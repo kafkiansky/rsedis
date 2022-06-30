@@ -1,0 +1,7 @@
+[package]
+name = "rsedis"
+version = "0.1.0"
+edition = "2021"
+authors = ["v.zanfir <vadimzanfir@gmail.com>"]
+
+[dependencies]
