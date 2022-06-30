@@ -6,8 +6,8 @@ use std::fmt;
 
 pub struct Conf {
     pub host: String,
-    pub password: String,
-    pub database: u8,
+    pub password: Option<String>,
+    pub database: Option<u8>,
 }
 
 pub struct Client {
@@ -28,16 +28,19 @@ impl Client {
     pub fn connect(conf: Conf) -> Result<Client, RedisError> {
         match TcpStream::connect(conf.host) {
             Ok(mut stream) => {
-                if !conf.password.is_empty() {
-                    if let Err(e) = stream.write(Command::auth(conf.password).as_bytes()) {
+                if let Some(pass) = conf.password {
+                    if let Err(e) = stream.write(Command::auth(pass).as_bytes()) {
                         return Err(RedisError{err: e.to_string()})
                     }
                 }
 
-                match stream.write(Command::select_database(conf.database).as_bytes()) {
-                    Ok(_) => Ok(Client{conn: stream}),
-                    Err(e) => Err(RedisError{err: e.to_string()})
+                if let Some(db) = conf.database {
+                    if let Err(e) = stream.write(Command::select_database(db).as_bytes()) {
+                        return Err(RedisError{err: e.to_string()})
+                    }
                 }
+
+                Ok(Client{conn: stream})
             },
             Err(e) => Err(RedisError{err: e.to_string()})
         }
